@@ -20,6 +20,12 @@ def flight_info(airport_code):
     response=response.json()
     return response
 
+#function Store the all flight information data in a json file
+def store_flight_info(flight_info):
+    #open the json file
+    with open('flight_info.json','w') as file:
+        #store the flight information in json file
+        json.dump(flight_info,file)
 
 #function to store the flight arrive (flight information: flight number and estimated time of arrival and  terminal number) in json object 
 def arrive_flight_info(flight_info):
@@ -75,7 +81,8 @@ def city_flight_info(flight_info,city):
             }
     return flight_city_info
 
-#function to store all details about particular flight  (flight information: flight number and original time of arrival and  status and  estimated time and  terminal number) in json object 
+#function to store all details about particular flight  (flight information: flight number and original time of arrival and  status and  estimated time and  terminal number)
+ #in json object 
 def flight_details(flight_info,flight_number):
     #loop through the flight information
     for flight in flight_info['data']:
@@ -101,6 +108,58 @@ def flight_details(flight_info,flight_number):
                 'delay':flight['arrival']['delay'],
             }
     return flight_details
+
+#function search if the option is 1 or 2 or 3 or 4 then call the function to store the flight information in json object
+def search_flight(option,value_search):
+
+    if option=='1':
+        flight_info=arrive_flight_info(flight_info)
+    elif option=='2':
+        flight_info=delayed_flight_info(flight_info)
+    elif option=='3':
+        flight_info=city_flight_info(flight_info,value_search)
+    elif option=='4':
+        flight_info=flight_details(flight_info,value_search)
+    return flight_info
+
+#create a list to store the online clients 
+online_clients=[]
+#function to handle the client request Wait for clients' requests to connect (should be able to accept three connections simultaneously).Accept the connection and Store the client’s name and display it on the terminal.
+def handle_client_request(active_socket,id_number):
+    try:
+        # Receive the client's name
+        client_name = active_socket.recv(1024).decode()
+        #create a json object to store the client information his name and id number
+        client_info={
+            'name':client_name,
+            'id':id_number
+        }
+        online_clients.append(client_info)
+        # Display the client's name and id with the message "has connected"
+        print(f'client {client_name} with id {id_number} has been connected')
+        #receive the client option and value in json object to search in loop until the client enter exit option
+        while True:
+            # Receive the client's option with value_search in json object
+            client_option = active_socket.recv(1024).decode()
+            #convert the json object to python dictionary
+            client_option=json.loads(client_option)
+            #if the client enter exit option then break the loop
+            if client_option['option']=='exit':
+                break
+            #call the function to search the flight information
+            flight_info=search_flight(client_option['option'],client_option['value_search'])
+            #convert the flight information to json object  to send it to the client
+            flight_info=json.dumps(flight_info)
+            # Send the flight information to the client
+            active_socket.sendall(flight_info.encode())
+        # Display the client's name and id with the message "has disconnected"
+        print(f'client {client_name} with id {id_number} has been disconnected')
+        #remove the client from the online clients list
+        online_clients.remove(client_info)
+    except:
+        print(f'client {client_name} with id {id_number} has been disconnected')
+        #remove the client from the online clients list
+        online_clients.remove(client_info)
 
 
 
