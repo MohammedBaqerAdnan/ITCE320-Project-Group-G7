@@ -6,7 +6,7 @@ def main():
         # Accept a connection
         (active_socket, client_address) = accept_connection(s)
         #create a thread to handle the client
-        t=threading.Thread(target='',args=(active_socket,client_address))
+        t=threading.Thread(target=handle_client_request,args=(active_socket,client_address))
         t.start()
     except Exception as e:
         print(e)
@@ -14,113 +14,109 @@ def main():
 
 #function to retrieve flight information
 def flight_info(airport_code):
-    key='bac0a8b3e116f33f338701edd40d4ae6'
+    key='758fff0b507ff10b8b758af057976ab6'
     parameter={'access_key':key,'limit':100,'arr_icao':airport_code}
-    response=requests.get('http://api.aviationstack.com/v1/flights',params=parameter)
+    response=requests.get('http://api.aviationstack.com/v1/flights',parameter)
     response=response.json()
     return response
 
 #function Store the all flight information data in a json file
 def store_flight_info(flight_info):
     #open the json file
-    with open('flight_info.json','w') as file:
+    with open('group_7.json','w') as file:
         #store the flight information in json file
-        json.dump(flight_info,file)
+        json.dump(flight_info,file,indent=2)
 
 #function to store the flight arrive (flight information: flight number and estimated time of arrival and  terminal number) in json object 
 def arrive_flight_info(flight_info):
+    flight_arrive_info={'IATA':[],'Number':[],'estimated':[],'terminal':[],'gate':[],'airport':[]}
     #loop through the flight information
     for flight in flight_info['data']:
         #if the flight is arrived
         if flight['flight_status']=='arrived':
             #store the flight information in json object
-            flight_arrive_info={
-                'IATA':flight['flight']['iata'],
-                'Number':flight['flight']['number'],
-                'estimated':flight['arrival']['estimated'],
-                'terminal':flight['arrival']['estimated'],
-                'gate':flight['arrival']['delay'],
-                'airport':flight['departure']['airport]'],
-            }
+            flight_arrive_info['IATA'].append(flight['flight']['iata'])
+            flight_arrive_info['Number'].append(flight['flight']['number'])
+            flight_arrive_info['estimated'].append(flight['arrival']['estimated'])
+            flight_arrive_info['terminal'].append(flight['arrival']['terminal'])
+            flight_arrive_info['gate'].append(flight['arrival']['delay'])
+            flight_arrive_info['airport'].append(flight['departure']['airport'])
     return flight_arrive_info
 
 
 
 #function to store the delayed flight (flight information: flight number and estimated time of arrival and  terminal number) in json object 
 def delayed_flight_info(flight_info):
+    flight_delayed_info={'IATA':[],'Number':[],'estimated':[],'terminal':[],'gate':[],'airport':[]}
     #loop through the flight information
     for flight in flight_info['data']:
         #if the flight is delayed
         if flight['flight_status']=='delayed':
             #store the flight information in json object
-            flight_delayed_info={
-                'IATA':flight['flight']['iata'],
-                'Number':flight['flight']['number'],
-                'estimated':flight['arrival']['estimated'],
-                'terminal':flight['arrival']['terminal'],
-                'gate':flight['arrival']['delay'],
-                'airport':flight['departure']['airport]'],
-            }
+            flight_delayed_info['IATA'].append(flight['flight']['iata'])
+            flight_delayed_info['Number'].append(flight['flight']['number'])
+            flight_delayed_info['estimated'].append(flight['arrival']['estimated'])
+            flight_delayed_info['terminal'].append(flight['arrival']['terminal'])
+            flight_delayed_info['gate'].append(flight['arrival']['delay'])
+            flight_delayed_info['airport'].append(flight['departure']['airport'])
     return flight_delayed_info
 
 #function to store the for specific city  flights  (flight information: flight number and original time of arrival and  status) in json object 
 def city_flight_info(flight_info,city):
+    flight_city_info={'IATA':[],'Number':[],'scheduled':[],'terminal':[],'gate':[],'flight_status':[],'airport':[]}
     #loop through the flight information
     for flight in flight_info['data']:
         #if the flight is arrived
         if flight['arrival']['airport']==city:
             #store the flight information in json object
-            flight_city_info={
-                'IATA':flight['flight']['iata'],
-                'Number':flight['flight']['number'],
-                'scheduled':flight['arrival']['scheduled'],
-                'terminal':flight['arrival']['terminal'],
-                'gate':flight['arrival']['gate'],
-                'flight_status':flight['flight_status'],
-                'airport':flight['departure']['airport]'],
-            }
+            flight_city_info['IATA'].append(flight['flight']['iata'])
+            flight_city_info['Number'].append(flight['flight']['number'])
+            flight_city_info['scheduled'].append(flight['arrival']['scheduled'])
+            flight_city_info['terminal'].append(flight['arrival']['terminal'])
+            flight_city_info['gate'].append(flight['arrival']['gate'])
+            flight_city_info['flight_status'].append(flight['flight_status'])
+            flight_city_info['airport'].append(flight['departure']['airport'])
     return flight_city_info
 
 #function to store all details about particular flight  (flight information: flight number and original time of arrival and  status and  estimated time and  terminal number)
- #in json object 
+#in json object 
 def flight_details(flight_info,flight_number):
+    flight_city_info={'IATA':[],'Number':[],'scheduled':[],'terminal':[],'gate':[],'flight_status':[],'airport':[],'estimated':[],'DATE':[],'departure_gate':[],'departure_terminal':[],'arrival_airport':[],'arrival_gate':[],'departure_time':[],'Number_departure':[],'delay':[]}
     #loop through the flight information
     for flight in flight_info['data']:
         #if the flight is arrived
         if flight['flight']['number']==flight_number:
             #store the flight information in json object
-            flight_details={
-                'IATA':flight['flight']['iata'],
-                'Number':flight['flight']['number'],
-                'scheduled':flight['arrival']['scheduled'],
-                'terminal':flight['arrival']['terminal'],
-                'gate':flight['arrival']['gate'],
-                'flight_status':flight['flight_status'],
-                'airport':flight['departure']['airport]'],
-                'estimated':flight['arrival']['estimated'],
-                'DATE':flight['flight_date'],
-                'departure_gate':flight['departure']['gate'],
-                'departure_terminal':flight['departure']['terminal'],
-                'arrival_airport':flight['arrival']['airport'],
-                'arrival_gate':flight['arrival']['gate'],
-                'departure_time':flight['departure']['scheduled'],
-                'Number':flight['departure']['scheduled'],
-                'delay':flight['arrival']['delay'],
-            }
-    return flight_details
+            flight_city_info['IATA'].append(flight['flight']['iata'])
+            flight_city_info['Number'].append(flight['flight']['number'])
+            flight_city_info['scheduled'].append(flight['arrival']['scheduled'])
+            flight_city_info['terminal'].append(flight['arrival']['terminal'])
+            flight_city_info['gate'].append(flight['arrival']['gate'])
+            flight_city_info['flight_status'].append(flight['flight_status'])
+            flight_city_info['airport'].append(flight['departure']['airport'])
+            flight_city_info['estimated'].append(flight['arrival']['estimated'])
+            flight_city_info['DATE'].append(flight['flight_date'])
+            flight_city_info['departure_gate'].append(flight['departure']['gate'])
+            flight_city_info['departure_terminal'].append(flight['departure']['terminal'])
+            flight_city_info['arrival_airport'].append(flight['arrival']['airport'])
+            flight_city_info['arrival_gate'].append(flight['arrival']['gate'])
+            flight_city_info['departure_time'].append(flight['departure']['scheduled'])
+            flight_city_info['Number_departure'].append(flight['departure']['iata'])
+            flight_city_info['delay'].append(flight['arrival']['delay'])
+    return flight_city_info
 
 #function search if the option is 1 or 2 or 3 or 4 then call the function to store the flight information in json object
-def search_flight(option,value_search):
+def search_flight(option,value_search,flight_info):
 
     if option=='1':
-        flight_info=arrive_flight_info(flight_info)
+        re_flight_info=arrive_flight_info(flight_info)
     elif option=='2':
-        flight_info=delayed_flight_info(flight_info)
+        re_flight_info=delayed_flight_info(flight_info)
     elif option=='3':
-        flight_info=city_flight_info(flight_info,value_search)
+        re_flight_info=city_flight_info(flight_info,value_search)
     elif option=='4':
-        flight_info=flight_details(flight_info,value_search)
-    return flight_info
+        return_flight_info=flight_details(flight_info,value_search)
+    return re_flight_info
 
 #create a list to store the online clients 
 online_clients=[]
@@ -137,7 +133,12 @@ def handle_client_request(active_socket,id_number):
         online_clients.append(client_info)
         # Display the client's name and id with the message "has connected"
         print(f'client {client_name} with id {id_number} has been connected')
-        #receive the client option and value in json object to search in loop until the client enter exit option
+        #receive the airport code from the client
+        airport_code=active_socket.recv(1024).decode()
+        #call the function to get the flight information from the airport code
+        flight_info=flight_info(airport_code)
+        #call the function store the flight information in json file
+        store_flight_info(flight_info)
         while True:
             # Receive the client's option with value_search in json object
             client_option = active_socket.recv(1024).decode()
@@ -147,7 +148,7 @@ def handle_client_request(active_socket,id_number):
             if client_option['option']=='exit':
                 break
             #call the function to search the flight information
-            flight_info=search_flight(client_option['option'],client_option['value_search'])
+            flight_info=search_flight(client_option['option'],client_option['value_search'],flight_info)
             #convert the flight information to json object  to send it to the client
             flight_info=json.dumps(flight_info)
             # Send the flight information to the client
