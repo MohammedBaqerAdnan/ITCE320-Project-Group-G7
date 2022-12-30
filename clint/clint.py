@@ -4,7 +4,14 @@ import socket , json
 port=8999
 with socket.socket(socket.AF_INET , socket.SOCK_STREAM) as cs:
         cs.connect(("" , port))
-    
+
+        
+        #sending the name and airport NO
+        def information():
+            name = input("pleas enter your name")
+            airPCode = input("pleas enter the airporrt NO")
+            cs.send(name.encode())
+            cs.send(airPCode.encde())
 
         #function of arrival flights
         def arrival_flight() :
