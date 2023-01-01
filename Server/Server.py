@@ -1,4 +1,4 @@
-import json,threading,socket,requests
+import json,threading,socket,requests,sys
 
 #main function with try and except and create a thread to handle the client
 def main():
@@ -15,7 +15,7 @@ def main():
 #function to retrieve flight information
 def flight_info(airport_code):
     key='a499d3ebda4cd62efd7841c09e4e43bf'
-    parameter={'access_key':key,'limit':100,'arr_icao':airport_code}
+    parameter={'access_key':key,'limit':100,'arr_icao': airport_code}
     response=requests.get('http://api.aviationstack.com/v1/flights',parameter)
     response=response.json()
     return response
@@ -51,7 +51,7 @@ def delayed_flight_info(flight_info):
     #loop through the flight information
     for flight in flight_info['data']:
         #if the flight is delayed
-        if flight['arrival']['delay']>0:
+        if flight['arrival']['delay']!='null':
             #store the flight information in json object
             flight_delayed_info['IATA'].append(flight['flight']['iata'])
             flight_delayed_info['Number'].append(flight['flight']['number'])
@@ -108,13 +108,13 @@ def flight_details(flight_info,flight_number):
 #function search if the option is 1 or 2 or 3 or 4 then call the function to store the flight information in json object
 def search_flight(option,value_search,flight_info):
 
-    if option=='1':
+    if option==1:
         re_flight_info=arrive_flight_info(flight_info)
-    elif option=='2':
+    elif option==2:
         re_flight_info=delayed_flight_info(flight_info)
-    elif option=='3':
+    elif option==3:
         re_flight_info=city_flight_info(flight_info,value_search)
-    elif option=='4':
+    elif option==4:
         re_flight_info=flight_details(flight_info,value_search)
     return re_flight_info
 
@@ -136,9 +136,9 @@ def handle_client_request(active_socket,id_number):
         #receive the airport code from the client
         airport_code=active_socket.recv(1024).decode()
         #call the function to get the flight information from the airport code
-        flight_info=flight_info(airport_code)
+        flight_info_i=flight_info(airport_code)
         #call the function store the flight information in json file
-        store_flight_info(flight_info)
+        store_flight_info(flight_info_i)
         while True:
             # Receive the client's option with value_search in json object
             client_option = active_socket.recv(1024).decode()
@@ -148,16 +148,21 @@ def handle_client_request(active_socket,id_number):
             if client_option['option']=='exit':
                 break
             #call the function to search the flight information
-            flight_info_in=search_flight(client_option['option'],client_option['value_search'],flight_info)
+            flight_info_in=search_flight(client_option['option'],client_option['value_search'],flight_info_i)
             #convert the flight information to json object  to send it to the client
-            flight_info_in=json.dumps(flight_info)
+            flight_info_in=json.dumps(flight_info_in)
             # Send the flight information to the client
             active_socket.sendall(flight_info_in.encode())
         # Display the client's name and id with the message "has disconnected"
         print(f'client {client_name} with id {id_number} has been disconnected')
         #remove the client from the online clients list
         online_clients.remove(client_info)
-    except:
+    except Exception as e:
+        #print the error message
+        print(e)
+        #print the error line number
+        print(sys.exc_info()[-1].tb_lineno)
+
         print(f'client {client_name} with id {id_number} has been disconnected')
         #remove the client from the online clients list
         online_clients.remove(client_info)
@@ -170,7 +175,7 @@ def create_passive_socket(listen_backlog):
     # Create a socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # Bind the socket to a port
-    s.bind(('  ', 8999))
+    s.bind(('127.0.0.1', 8999))
     # Listen for connections
     s.listen(listen_backlog)
     # Return the socket and the port number
