@@ -14,11 +14,22 @@ def main():
 
 #function to retrieve flight information
 def flight_info(airport_code):
-    key='a499d3ebda4cd62efd7841c09e4e43bf'
-    parameter={'access_key':key,'limit':100,'arr_icao': airport_code}
-    response=requests.get('http://api.aviationstack.com/v1/flights',parameter)
-    response=response.json()
-    return response
+    while True:
+        key='a499d3ebda4cd62efd7841c09e4e43bf'
+        parameter={'access_key':key,'limit':100,'arr_icao': airport_code}
+        response=requests.get('http://api.aviationstack.com/v1/flights',parameter)
+        response=response.json()
+        store_flight_info(response)
+        if 'error' in response:
+            continue
+        else:
+            print('received successfully')
+            return response
+        
+
+
+
+
 
 #function Store the all flight information data in a json file
 def store_flight_info(flight_info):
