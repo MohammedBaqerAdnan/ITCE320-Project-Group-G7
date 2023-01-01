@@ -1,4 +1,4 @@
-import json,threading,socket,requests,sys
+import json,threading,socket,requests,sys,ssl
 
 #main function with try and except and create a thread to handle the client
 def main():
@@ -19,17 +19,12 @@ def flight_info(airport_code):
         parameter={'access_key':key,'limit':100,'arr_icao': airport_code}
         response=requests.get('http://api.aviationstack.com/v1/flights',parameter)
         response=response.json()
-        store_flight_info(response)
         if 'error' in response:
             continue
         else:
             print('received successfully')
             return response
         
-
-
-
-
 
 #function Store the all flight information data in a json file
 def store_flight_info(flight_info):
@@ -178,10 +173,19 @@ def handle_client_request(active_socket,id_number):
         #remove the client from the online clients list
         online_clients.remove(client_info)
 
+#context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+#context.load_cert_chain('crti.crt', 'priavte.key')
+def secure_create_passive_socket(listen_backlog):
+    # Create a socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # Bind the socket to a port
+    s.bind(('127.0.0.1', 8999))
+    # Listen for connections
+    s.listen(listen_backlog)
+    # Return the socket and the port number
+#    s=context.wrap_socket(s, server_side=True)
+    return s
 
-
-
-#function to create a passive socket
 def create_passive_socket(listen_backlog):
     # Create a socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -202,6 +206,10 @@ def accept_connection(s):
 
 # Create a passive socket
 s = create_passive_socket(3)
+
+#if you want it secure remove the comment from the next line and comment the previous line
+#create secure passive socket
+#s = secure_create_passive_socket(3)
 
 #call the main function in while loop
 while True:
